@@ -9,7 +9,7 @@
 <body>
     <div class="container mt-4">
         <h1 class="text-danger">Eliminar Glosa</h1>
-        <p>¿Estás seguro que deseas eliminar la glosa con código <strong>{{ glosa.code_glosa }}</strong>?</p>
+        <p>¿Estás seguro que deseas eliminar la glosa con código <strong>{{ data.code_glosa }}</strong>?</p>
         <form method="POST" action="{% url 'DeleteGlosa' glosa.id %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">Eliminar</button>

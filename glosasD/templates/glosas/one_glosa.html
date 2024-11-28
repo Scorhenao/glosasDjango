@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glosa</title>
+    <title>Detalle de la Glosa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -12,9 +12,16 @@
             <h1 class="text-success">Detalle de la Glosa</h1>
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Código: {{ data.code_glosa }}</h5>
-                    <p class="card-text">Descripción: {{ data.description }}</p>
-                    <p class="card-text">Monto Rechazado: {{ data.rejected_amount }}</p>
+                    <h5 class="card-title">Código: {{ data.getCodigoGlosa }}</h5>
+                    <p class="card-text">Descripción: {{ data.getDescriptionGlosa }}</p>
+                    <p class="card-text">Monto Rechazado: {{ data.getRejectedAmount }}</p>
+                    <p class="card-text">Documentos Faltantes: {{ data.getMissedDocuments }}</p>
+
+                    <!-- Mostrar el botón de eliminación solo si la glosa existe -->
+                    <form method="POST" action="{% url 'DeleteGlosa' data.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
                 </div>
             </div>
         {% else %}
