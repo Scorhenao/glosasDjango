@@ -21,9 +21,9 @@ from glosasAPIDJ import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Glosas for less documentation
-    path('api/glosas/less_doc/', views.get_all_glosas_less_doc, name='GetAllGlosas'),
+    path('api/glosas/', views.get_all_glosas, name='GetAllGlosas'),
     path('api/glosas/less_doc/<int:glosa_id>/', views.get_one_glosa_less_doc, name='GetOneGlosa'),
-    path('api/glosas/less_doc/create/', views.create_glosa_less_doc, name='CreateGlosa'),
+    path('api/glosas/create/', views.create_glosa, name='CreateGlosa'),
     path('api/glosas/less_doc/update/<int:glosa_id>/', views.update_glosa_less_doc, name='UpdateGlosa'),
     path('api/glosas/less_doc/delete/<int:glosa_id>/', views.delete_glosa_less_doc, name='DeleteGlosa'),
 ]
