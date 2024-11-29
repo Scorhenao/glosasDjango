@@ -25,5 +25,5 @@ urlpatterns = [
     path('api/glosas/less_doc/<int:glosa_id>/', views.get_one_glosa_less_doc, name='GetOneGlosa'),
     path('api/glosas/create/', views.create_glosa, name='CreateGlosa'),
     path('api/glosas/update/<int:glosa_id>/', views.update_glosa, name='UpdateGlosa'),
-    path('api/glosas/less_doc/delete/<int:glosa_id>/', views.delete_glosa_less_doc, name='DeleteGlosa'),
+    path('api/glosas/delete/<int:glosa_id>/', views.delete_glosa, name='DeleteGlosa'),
 ]

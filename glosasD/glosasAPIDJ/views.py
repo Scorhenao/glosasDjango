@@ -1,9 +1,43 @@
-from django.shortcuts import redirect, render, get_list_or_404
+from django.shortcuts import redirect, render, redirect, get_list_or_404, get_object_or_404
 from .models import GlosaForLessDocumentation, GlosaForErrorOFfactoring
 from .forms import GlosaForLessDocumentationForm, GlosaForErrorOFfactoringForm
 
-# CRUD less documentation
-from django.shortcuts import render, get_object_or_404
+
+def get_all_glosas(request):
+    try:
+        glosas_less_doc = GlosaForLessDocumentation.objects.all()
+        glosas_error_factoring = GlosaForErrorOFfactoring.objects.all()
+    except Exception as e:
+        return render(request, 'glosas/glosas.html', {
+            'status': 500,
+            'data_less_doc': [],
+            'data_error_factoring': [],
+            'message': f'Error al cargar las glosas: {str(e)}'
+        })
+    
+    return render(request, 'glosas/glosas.html', {
+        'status': 200,
+        'data_less_doc': glosas_less_doc,
+        'data_error_factoring': glosas_error_factoring,
+        'message': 'OK'
+    })
+
+def get_one_glosa_error_factoring(request, glosa_id):
+    try:
+        glosa = get_object_or_404(GlosaForErrorOFfactoring, pk=glosa_id)
+    except Exception as e:
+        return render(request, 'glosas/one_glosa.html', {
+            'status': 500, 
+            'data': None, 
+            'message': f'Error: {str(e)}'
+        })
+
+    return render(request, 'glosas/one_glosa.html', {
+        'status': 200, 
+        'data': glosa, 
+        'message': 'OK'
+    })
+
 
 def get_one_glosa_less_doc(request, glosa_id):
     try:
@@ -21,9 +55,6 @@ def get_one_glosa_less_doc(request, glosa_id):
         'message': 'OK'
     })
 
-
-from django.shortcuts import render, redirect
-from .forms import GlosaForLessDocumentationForm, GlosaForErrorOFfactoringForm
 
 def create_glosa(request):
     if request.method == 'POST':
@@ -149,82 +180,50 @@ def update_glosa(request, glosa_id):
     })
 
 
-def delete_glosa_less_doc(request, glosa_id):
-    glosa = get_object_or_404(GlosaForLessDocumentation, pk=glosa_id)
-    
-    if request.method == 'POST':
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import GlosaForLessDocumentation, GlosaForErrorOFfactoring
+
+def delete_glosa(request, glosa_id):
+    # Intentamos obtener la glosa de ambos tipos
+    glosa = None
+    try:
+        glosa = get_object_or_404(GlosaForLessDocumentation, pk=glosa_id)
+        glosa_type = 'less_documentation'
+    except:
         try:
-            glosa.delete()
-            return redirect('GetAllGlosas')
-        except Exception as e:
-            print(str(e))
-            return render(request, 'glosas/one_glosa.html', {
-                'status': 500,
-                'data': None,
-                'message': 'Error deleting glosa'
-            })
+            glosa = get_object_or_404(GlosaForErrorOFfactoring, pk=glosa_id)
+            glosa_type = 'error_factoring'
+        except:
+            glosa_type = None
 
-    return render(request, 'glosas/one_glosa.html', {
-        'status': 200,
-        'data': glosa,
-        'message': '¿Estás seguro que deseas eliminar esta glosa?'
-    })
-
-
-# CRUD error factoring 
-def get_all_glosas(request):
-    try:
-        glosas_less_doc = GlosaForLessDocumentation.objects.all()
-        glosas_error_factoring = GlosaForErrorOFfactoring.objects.all()
-    except Exception as e:
-        return render(request, 'glosas/glosas.html', {
-            'status': 500,
-            'data_less_doc': [],
-            'data_error_factoring': [],
-            'message': f'Error al cargar las glosas: {str(e)}'
-        })
-    
-    return render(request, 'glosas/glosas.html', {
-        'status': 200,
-        'data_less_doc': glosas_less_doc,
-        'data_error_factoring': glosas_error_factoring,
-        'message': 'OK'
-    })
-
-def get_one_glosa_error_factoring(request, glosa_id):
-    try:
-        glosa = get_object_or_404(GlosaForErrorOFfactoring, pk=glosa_id)
-    except Exception as e:
+    # Si no encontramos la glosa, mostramos un error
+    if glosa is None:
         return render(request, 'glosas/one_glosa.html', {
-            'status': 500, 
-            'data': None, 
-            'message': f'Error: {str(e)}'
+            'status': 404,
+            'data': None,
+            'message': 'Glosa no encontrada'
         })
 
-    return render(request, 'glosas/one_glosa.html', {
-        'status': 200, 
-        'data': glosa, 
-        'message': 'OK'
-    })
+    # Intentar acceder a code_glosa, si no existe, se muestra un valor por defecto
+    code_glosa = getattr(glosa, 'code_glosa', 'No disponible')
 
-def delete_glosa_error_factoring(request, glosa_id):
-    glosa = get_object_or_404(GlosaForErrorOFfactoring, pk=glosa_id)
-    
+    # Si la solicitud es POST, intentamos eliminar la glosa
     if request.method == 'POST':
         try:
             glosa.delete()
-            return redirect('GetAllGlosas')
+            return redirect('GetAllGlosas')  # Redirige a la lista de glosas
         except Exception as e:
-            print(str(e))
             return render(request, 'glosas/one_glosa.html', {
                 'status': 500,
                 'data': None,
-                'message': 'Error deleting glosa'
+                'message': f'Error al eliminar la glosa: {str(e)}'
             })
 
-    return render(request, 'glosas/one_glosa.html', {
+    # Si la solicitud es GET, mostramos la página de confirmación
+    return render(request, 'glosas/delete_glosa.html', {
         'status': 200,
         'data': glosa,
-        'message': '¿Estás seguro que deseas eliminar esta glosa?'
+        'glosa_type': glosa_type,
+        'code_glosa': code_glosa,
+        'message': f'¿Estás seguro que deseas eliminar la glosa con código {code_glosa}?'
     })
-
