@@ -57,21 +57,98 @@ def create_glosa(request):
         'message': 'Solicitud inválida'
     })
 
+def update_glosa(request, glosa_id):
+    # Verificar si la vista se está llamando
+    print("Vista update_glosa llamada")
 
-def update_glosa_less_doc(request, glosa_id):
-    glosa = get_object_or_404(GlosaForLessDocumentation, pk=glosa_id)
+    # Inicializamos la glosa y form_type
+    glosa = None
+    form_type = None
 
+    # Intentar obtener la glosa correspondiente (de ambos modelos)
+    glosa_less_doc = None
+    glosa_error_fact = None
+
+    # Buscar primero GlosaForLessDocumentation
+    try:
+        glosa_less_doc = get_object_or_404(GlosaForLessDocumentation, pk=glosa_id)
+    except:
+        glosa_less_doc = None
+
+    # Buscar luego GlosaForErrorOFfactoring si no se encontró una de tipo 'less_documentation'
+    try:
+        glosa_error_fact = get_object_or_404(GlosaForErrorOFfactoring, pk=glosa_id)
+    except:
+        glosa_error_fact = None
+
+    # Si no encontramos ninguna glosa, mostramos un mensaje de error
+    if not glosa_less_doc and not glosa_error_fact:
+        return render(request, 'glosas/one_glosa.html', {
+            'status': 404,
+            'data': None,
+            'message': 'Glosa no encontrada'
+        })
+
+    # Determinamos el tipo de glosa
+    if glosa_less_doc:
+        glosa = glosa_less_doc
+        form_type = 'less_documentation'
+    elif glosa_error_fact:
+        glosa = glosa_error_fact
+        form_type = 'error_factoring'
+
+    # Si es un GET, mostramos el formulario con los datos de la glosa
+    if request.method == 'GET':
+        # Crear el formulario dependiendo del tipo de glosa
+        if form_type == 'less_documentation':
+            form = GlosaForLessDocumentationForm(instance=glosa)
+        elif form_type == 'error_factoring':
+            form = GlosaForErrorOFfactoringForm(instance=glosa)
+
+        return render(request, 'glosas/update_glosa.html', {
+            'glosa': glosa,
+            'glosa_type': form_type,
+            'form': form
+        })
+
+    # Si es un POST, procesamos el formulario
     if request.method == 'POST':
-        form = GlosaForLessDocumentationForm(request.POST, instance=glosa)
-        if form.is_valid():
-            try:
-                form.save()
-                return redirect('get_one_glosa', glosa_id=glosa_id) 
-            except Exception as e:
-                return render(request, 'glosas/update_glosa.html', {'form': form, 'glosa': glosa, 'message': f'Error al actualizar: {str(e)}'})
-    else:
-        form = GlosaForLessDocumentationForm(instance=glosa)  
-    
+        form_type = request.POST.get('form_type')  # Aquí obtenemos el form_type del POST
+
+        if form_type == 'less_documentation':
+            form = GlosaForLessDocumentationForm(request.POST, instance=glosa)
+            if form.is_valid():
+                try:
+                    form.save()
+                    return redirect('GetAllGlosas')
+                except Exception as e:
+                    return render(request, 'glosas/update_glosa.html', {
+                        'glosa': glosa,
+                        'glosa_type': 'less_documentation',
+                        'message': f'Error al actualizar (Documentos Faltantes): {str(e)}',
+                        'form': form
+                    })
+        elif form_type == 'error_factoring':
+            form = GlosaForErrorOFfactoringForm(request.POST, instance=glosa)
+            if form.is_valid():
+                try:
+                    form.save()
+                    return redirect('GetAllGlosas')
+                except Exception as e:
+                    return render(request, 'glosas/update_glosa.html', {
+                        'glosa': glosa,
+                        'glosa_type': 'error_factoring',
+                        'message': f'Error al actualizar (Error Facturación): {str(e)}',
+                        'form': form
+                    })
+
+    # Si algo sale mal, devolver el mensaje de error
+    return render(request, 'glosas/update_glosa.html', {
+        'glosa': glosa,
+        'message': 'Error desconocido al intentar actualizar la glosa'
+    })
+
+
 def delete_glosa_less_doc(request, glosa_id):
     glosa = get_object_or_404(GlosaForLessDocumentation, pk=glosa_id)
     
@@ -129,22 +206,6 @@ def get_one_glosa_error_factoring(request, glosa_id):
         'data': glosa, 
         'message': 'OK'
     })
-
-def update_glosa_error_factoring(request, glosa_id):
-    glosa = get_object_or_404(GlosaForErrorOFfactoring, pk=glosa_id)
-
-    if request.method == 'POST':
-        form = GlosaForErrorOFfactoringForm(request.POST, instance=glosa)
-        if form.is_valid():
-            try:
-                form.save()
-                return redirect('get_one_glosa', glosa_id=glosa_id) 
-            except Exception as e:
-                return render(request, 'glosas/update_glosa.html', {'form': form, 'glosa': glosa, 'message': f'Error al actualizar: {str(e)}'})
-    else:
-        form = GlosaForErrorOFfactoringForm(instance=glosa)
-    
-    return render(request, 'glosas/update_glosa.html', {'form': form, 'glosa': glosa})
 
 def delete_glosa_error_factoring(request, glosa_id):
     glosa = get_object_or_404(GlosaForErrorOFfactoring, pk=glosa_id)
